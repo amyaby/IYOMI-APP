@@ -1,0 +1,19 @@
+# Android
+app/build/
+.idea/
+.gradle/
+local.properties
+*.iml
+*.ipr
+*.iws
+*.class
+*.jar
+*.log
+*.xml
+*.globals
+*.apk
+*.dex
+*.so
+*.bak
+*.swp
+.DS_Store

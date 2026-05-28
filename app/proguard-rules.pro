@@ -1,0 +1,2 @@
+-keep class com.yomi.database.entities.** { *; }
+-keep class com.yomi.model.** { *; }
