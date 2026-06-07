@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
         binding.tabHome.setOnClickListener(v -> navigateTo(R.id.homeFragment));
         binding.tabMyBds.setOnClickListener(v -> navigateTo(R.id.myBdsFragment));
         binding.tabExplore.setOnClickListener(v -> navigateTo(R.id.explorerFragment));
+        binding.tabFriends.setOnClickListener(v -> navigateTo(R.id.friendsFragment));
         binding.tabProfile.setOnClickListener(v -> navigateTo(R.id.profileFragment));
 
         navController.addOnDestinationChangedListener((controller, destination, arguments) -> {
@@ -77,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
 
         binding.ivTabExplore.setColorFilter(currentId == R.id.explorerFragment ? activeColor : inactiveColor);
         binding.tvTabExplore.setTextColor(currentId == R.id.explorerFragment ? activeColor : inactiveColor);
+
+        binding.ivTabFriends.setColorFilter(currentId == R.id.friendsFragment ? activeColor : inactiveColor);
+        binding.tvTabFriends.setTextColor(currentId == R.id.friendsFragment ? activeColor : inactiveColor);
 
         binding.ivTabProfile.setColorFilter(currentId == R.id.profileFragment ? activeColor : inactiveColor);
         binding.tvTabProfile.setTextColor(currentId == R.id.profileFragment ? activeColor : inactiveColor);

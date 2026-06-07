@@ -16,8 +16,14 @@ public interface PlayerDao {
     @Query("SELECT * FROM players ORDER BY createdAt DESC")
     LiveData<List<PlayerEntity>> getAllPlayers();
 
+    @Query("SELECT * FROM players ORDER BY createdAt DESC")
+    List<PlayerEntity> getAllPlayersSync();
+
     @Query("SELECT * FROM players WHERE id = :id")
     PlayerEntity getById(long id);
+
+    @Query("SELECT * FROM players WHERE name = :username LIMIT 1")
+    PlayerEntity getByUsername(String username);
 
     @Query("SELECT * FROM players WHERE email = :email AND password = :password LIMIT 1")
     PlayerEntity login(String email, String password);

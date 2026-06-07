@@ -9,7 +9,6 @@ local.properties
 *.class
 *.jar
 *.log
-*.xml
 *.globals
 *.apk
 *.dex

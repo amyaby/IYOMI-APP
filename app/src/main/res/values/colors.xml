@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="primary">#7B5EA7</color>
+    <color name="primary_dark">#2D1B4E</color>
+    <color name="primary_light">#F0E8FB</color>
+    <color name="background">#FDF8FF</color>
+    <color name="text_main">#2D1B4E</color>
+    <color name="text_secondary">#9B82C0</color>
+    <color name="text_muted">#B39CC8</color>
+    <color name="border_light">#E4D8F5</color>
+    <color name="white">#FFFFFF</color>
+
+    <!-- Aliases used in layouts -->
+    <color name="yomi_dark">#2D1B4E</color>
+    <color name="yomi_card">#FFFFFF</color>
+    <color name="yomi_red">#E63946</color>
+    <color name="text_primary">#2D1B4E</color>
+
+    <!-- Pill Colors -->
+    <color name="pill_v_bg">#EDE5F8</color>
+    <color name="pill_v_text">#534AB7</color>
+    <color name="pill_p_bg">#FDE8F3</color>
+    <color name="pill_p_text">#993556</color>
+    <color name="pill_g_bg">#EAF3DE</color>
+    <color name="pill_g_text">#3B6D11</color>
+    <color name="pill_o_bg">#FFF0E0</color>
+    <color name="pill_o_text">#854F0B</color>
+</resources>

@@ -13,13 +13,22 @@ public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.ViewHold
 
     private List<Story> stories = new ArrayList<>();
     private OnStoryClickListener listener;
+    private OnReactionClickListener reactionListener;
 
     public interface OnStoryClickListener {
         void onStoryClick(Story story);
     }
 
+    public interface OnReactionClickListener {
+        void onReactionClick(long storyId);
+    }
+
     public void setOnStoryClickListener(OnStoryClickListener listener) {
         this.listener = listener;
+    }
+
+    public void setOnReactionClickListener(OnReactionClickListener listener) {
+        this.reactionListener = listener;
     }
 
     public void setStories(List<Story> stories) {
@@ -39,17 +48,21 @@ public class ExploreAdapter extends RecyclerView.Adapter<ExploreAdapter.ViewHold
         Story story = stories.get(position);
         
         holder.binding.tvExploreTitle.setText(story.getTitle());
-        holder.binding.tvExploreSub.setText(story.getTotalPanels() + " panels · " + story.getPlayerOrder().size() + " joueurs");
+        holder.binding.tvExploreSub.setText(story.getTotalPanels() + " panels");
         
-        // Mocking thumb and reactions for visual consistency with design
-        if (position % 3 == 0) holder.binding.tvExploreThumb.setText("🚀");
-        else if (position % 3 == 1) holder.binding.tvExploreThumb.setText("🐉");
+        // Visual variety
+        if (story.getId() % 3 == 0) holder.binding.tvExploreThumb.setText("🚀");
+        else if (story.getId() % 3 == 1) holder.binding.tvExploreThumb.setText("🐉");
         else holder.binding.tvExploreThumb.setText("🐙");
         
-        holder.binding.tvExploreReact.setText("🔥 " + (100 + position * 7));
+        holder.binding.tvExploreReact.setText("🔥 " + story.getReactionCount());
 
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) listener.onStoryClick(story);
+        });
+
+        holder.binding.tvExploreReact.setOnClickListener(v -> {
+            if (reactionListener != null) reactionListener.onReactionClick(story.getId());
         });
     }
 

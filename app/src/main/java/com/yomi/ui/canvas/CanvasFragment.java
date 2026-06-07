@@ -1,0 +1,148 @@
+package com.yomi.ui.canvas;
+
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Color;
+import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.Toast;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.lifecycle.ViewModelProvider;
+import androidx.navigation.Navigation;
+import com.yomi.R;
+import com.yomi.databinding.FragmentDrawBinding;
+import com.yomi.repository.SessionManager;
+
+public class CanvasFragment extends Fragment {
+
+    private FragmentDrawBinding binding;
+    private CanvasViewModel viewModel;
+    private SessionManager sessionManager;
+    private long storyId;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        if (getArguments() != null) {
+            storyId = getArguments().getLong("storyId");
+        }
+        sessionManager = new SessionManager(requireContext());
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        binding = FragmentDrawBinding.inflate(inflater, container, false);
+        return binding.getRoot();
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        viewModel = new ViewModelProvider(this).get(CanvasViewModel.class);
+
+        setupTools();
+        setupColors();
+        observeViewModel();
+
+        viewModel.loadPreviousPanelOnly(storyId); 
+
+        binding.btnTogglePrevious.setOnClickListener(v -> {
+            boolean isVisible = binding.previousPanelPreview.getVisibility() == View.VISIBLE;
+            binding.previousPanelPreview.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+        });
+
+        binding.btnPlace.setOnClickListener(v -> {
+            String text = binding.etBubbleText.getText().toString().trim();
+            if (!text.isEmpty()) {
+                binding.tvPlacedBubble.setText(text);
+                binding.tvPlacedBubble.setVisibility(View.VISIBLE);
+                Toast.makeText(getContext(), "Bulle placée !", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        binding.btnSubmit.setOnClickListener(v -> {
+            Bitmap drawing = binding.canvasView.getBitmap();
+            if (drawing == null) {
+                Toast.makeText(getContext(), "Le dessin est vide !", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            
+            String bubbleText = binding.etBubbleText.getText().toString().trim();
+            viewModel.submitTurn(storyId, sessionManager.getPlayerId(), drawing, bubbleText);
+            
+            Toast.makeText(getContext(), "Panel soumis ! ✨", Toast.LENGTH_SHORT).show();
+            // Updated to use navigation action for better stack management
+            Navigation.findNavController(v).navigate(R.id.action_draw_to_home);
+        });
+    }
+
+    private void setupTools() {
+        binding.btnPencil.setOnClickListener(v -> {
+            binding.canvasView.setEraserMode(false);
+            updateToolUI(binding.btnPencil);
+        });
+        binding.btnEraser.setOnClickListener(v -> {
+            binding.canvasView.setEraserMode(true);
+            updateToolUI(binding.btnEraser);
+        });
+        binding.btnUndo.setOnClickListener(v -> binding.canvasView.undo());
+        
+        // Redo support
+        binding.btnRedo.setOnClickListener(v -> binding.canvasView.redo());
+        
+        binding.btnTrash.setOnClickListener(v -> binding.canvasView.clear());
+        
+        binding.sbStroke.setOnSeekBarChangeListener(new android.widget.SeekBar.OnSeekBarChangeListener() {
+            @Override public void onProgressChanged(android.widget.SeekBar seekBar, int progress, boolean fromUser) {
+                binding.canvasView.setStrokeWidth(progress + 5);
+            }
+            @Override public void onStartTrackingTouch(android.widget.SeekBar s) {}
+            @Override public void onStopTrackingTouch(android.widget.SeekBar s) {}
+        });
+    }
+
+    private void updateToolUI(View active) {
+        binding.btnPencil.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.white));
+        binding.btnEraser.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.white));
+        active.setBackgroundTintList(ContextCompat.getColorStateList(requireContext(), R.color.pill_v_bg));
+    }
+
+    private void setupColors() {
+        int[] palette = {Color.BLACK, Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW, Color.MAGENTA};
+        binding.colorsRow.removeAllViews();
+        for (int color : palette) {
+            View dot = new View(requireContext());
+            LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(60, 60);
+            lp.setMargins(12, 0, 12, 0);
+            dot.setLayoutParams(lp);
+            dot.setBackgroundResource(R.drawable.bg_color_dot);
+            dot.setBackgroundTintList(android.content.res.ColorStateList.valueOf(color));
+            dot.setOnClickListener(v -> binding.canvasView.setPaintColor(color));
+            binding.colorsRow.addView(dot);
+        }
+    }
+
+    private void observeViewModel() {
+        viewModel.getPreviousPanelData().observe(getViewLifecycleOwner(), panel -> {
+            if (panel != null && panel.getImagePath() != null) {
+                binding.ivPreviousPanel.setImageBitmap(BitmapFactory.decodeFile(panel.getImagePath()));
+                binding.tvPreviousBubble.setText(panel.getDialogText());
+                binding.tvPreviousBubble.setVisibility(View.VISIBLE);
+            }
+        });
+        viewModel.getTimerValue().observe(getViewLifecycleOwner(), time -> binding.tvTimer.setText(time));
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        binding = null;
+    }
+}

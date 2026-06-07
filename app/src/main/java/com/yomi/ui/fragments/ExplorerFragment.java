@@ -39,7 +39,6 @@ public class ExplorerFragment extends Fragment {
 
         setupFilters();
         setupRecyclerViews();
-        setupVoting();
         observeViewModel();
     }
 
@@ -51,27 +50,26 @@ public class ExplorerFragment extends Fragment {
     private void setupRecyclerViews() {
         popularAdapter = new ExplorerAdapter();
         binding.rvPopularGrid.setAdapter(popularAdapter);
+        popularAdapter.setOnStoryClickListener(story -> {
+            Bundle args = new Bundle();
+            args.putLong("storyId", story.getId());
+            Navigation.findNavController(requireView()).navigate(R.id.revealFragment, args);
+        });
 
         joinableAdapter = new ExploreAdapter();
         binding.rvJoinableStories.setAdapter(joinableAdapter);
         joinableAdapter.setOnStoryClickListener(story -> {
             viewModel.joinStory(story.getId());
             Toast.makeText(getContext(), "Vous avez rejoint : " + story.getTitle(), Toast.LENGTH_SHORT).show();
-            Navigation.findNavController(requireView()).navigate(R.id.homeFragment);
         });
 
         LeaderboardAdapter leaderboardAdapter = new LeaderboardAdapter();
         binding.rvLeaderboard.setAdapter(leaderboardAdapter);
     }
 
-    private void setupVoting() {
-        binding.btnVoteFunny.setOnClickListener(v -> handleVote("😂"));
-        binding.btnVoteTouching.setOnClickListener(v -> handleVote("❤️"));
-        binding.btnVoteMasterpiece.setOnClickListener(v -> handleVote("🔥"));
-    }
-
-    private void handleVote(String type) {
-        Toast.makeText(getContext(), "Voté : " + type, Toast.LENGTH_SHORT).show();
+    private void handleVote(long storyId, String emoji) {
+        viewModel.vote(storyId, emoji);
+        Toast.makeText(getContext(), "Merci pour votre vote " + emoji + " !", Toast.LENGTH_SHORT).show();
     }
 
     private void observeViewModel() {
@@ -93,7 +91,21 @@ public class ExplorerFragment extends Fragment {
 
         viewModel.getJoinableStories().observe(getViewLifecycleOwner(), stories -> {
             if (stories != null) {
-                joinableAdapter.setStories(stories);
+                joinableAdapter.setStories(stories); 
+            }
+        });
+
+        viewModel.getFeaturedStory().observe(getViewLifecycleOwner(), story -> {
+            if (story != null) {
+                binding.cardFeaturedStory.setVisibility(View.VISIBLE);
+                binding.tvFeaturedTitle.setText(story.getTitle());
+                binding.tvFeaturedMeta.setText(story.getTotalPanels() + " panels");
+                
+                binding.btnVoteFunny.setOnClickListener(v -> handleVote(story.getId(), "😂"));
+                binding.btnVoteTouching.setOnClickListener(v -> handleVote(story.getId(), "❤️"));
+                binding.btnVoteMasterpiece.setOnClickListener(v -> handleVote(story.getId(), "🔥"));
+            } else {
+                binding.cardFeaturedStory.setVisibility(View.GONE);
             }
         });
     }

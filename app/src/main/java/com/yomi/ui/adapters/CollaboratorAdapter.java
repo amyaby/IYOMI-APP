@@ -7,14 +7,24 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.yomi.R;
+import com.yomi.database.PlayerEntity;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CollaboratorAdapter extends RecyclerView.Adapter<CollaboratorAdapter.ViewHolder> {
 
-    private List<String> collaborators = new ArrayList<>();
+    private List<PlayerEntity> collaborators = new ArrayList<>();
+    private OnCollaboratorClickListener listener;
 
-    public void setCollaborators(List<String> collaborators) {
+    public interface OnCollaboratorClickListener {
+        void onCollaboratorClick(PlayerEntity player);
+    }
+
+    public void setOnCollaboratorClickListener(OnCollaboratorClickListener listener) {
+        this.listener = listener;
+    }
+
+    public void setCollaborators(List<PlayerEntity> collaborators) {
         this.collaborators = collaborators;
         notifyDataSetChanged();
     }
@@ -28,24 +38,22 @@ public class CollaboratorAdapter extends RecyclerView.Adapter<CollaboratorAdapte
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        // Mocking data for now as per HTML
-        String[] icons = {"🦊", "🌙", "🎨", "⚡"};
-        String[] names = {"@foxi", "@luna", "@arty", "@zap"};
-        
-        if (position < icons.length) {
-            holder.tvAv.setText(icons[position]);
-            holder.tvName.setText(names[position]);
-        }
+        PlayerEntity player = collaborators.get(position);
+        holder.tvAv.setText(player.getAvatarEmoji());
+        holder.tvName.setText("@" + player.getName());
+
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) listener.onCollaboratorClick(player);
+        });
     }
 
     @Override
     public int getItemCount() {
-        return 4; // Mocking 4 collaborators
+        return collaborators.size();
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView tvAv, tvName;
-
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
             tvAv = itemView.findViewById(R.id.tvCollaboratorAv);

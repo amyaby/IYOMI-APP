@@ -12,12 +12,14 @@ import androidx.navigation.Navigation;
 import com.yomi.R;
 import com.yomi.databinding.FragmentProfileBinding;
 import com.yomi.repository.SessionManager;
+import com.yomi.viewmodel.DashboardViewModel;
 import com.yomi.viewmodel.ProfileViewModel;
 
 public class ProfileFragment extends Fragment {
 
     private FragmentProfileBinding binding;
-    private ProfileViewModel viewModel;
+    private ProfileViewModel profileViewModel;
+    private DashboardViewModel dashboardViewModel;
     private SessionManager sessionManager;
 
     @Nullable
@@ -31,42 +33,62 @@ public class ProfileFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         sessionManager = new SessionManager(requireContext());
-        viewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        profileViewModel = new ViewModelProvider(this).get(ProfileViewModel.class);
+        // Shared logic with dashboard for notifications
+        dashboardViewModel = new ViewModelProvider(requireActivity()).get(DashboardViewModel.class);
 
-        observeViewModel();
+        observeViewModels();
 
         binding.btnLogout.setOnClickListener(v -> {
-            sessionManager.logout(); // Clear the session
+            sessionManager.logout();
             Navigation.findNavController(v).navigate(R.id.action_profile_to_splash);
         });
 
-        binding.btnSettings.setOnClickListener(v -> {
-            // Settings logic
-        });
+        binding.menuEditProfile.setOnClickListener(v -> 
+            Navigation.findNavController(v).navigate(R.id.action_profile_to_edit)
+        );
+
+        binding.menuNotifications.setOnClickListener(v -> 
+            Navigation.findNavController(v).navigate(R.id.action_profile_to_notifications)
+        );
+
+        binding.menuPrivacy.setOnClickListener(v -> 
+            Navigation.findNavController(v).navigate(R.id.action_profile_to_privacy)
+        );
     }
 
-    private void observeViewModel() {
-        viewModel.getUsername().observe(getViewLifecycleOwner(), name -> {
+    private void observeViewModels() {
+        profileViewModel.getUsername().observe(getViewLifecycleOwner(), name -> {
             if (name != null) {
                 binding.tvProfileName.setText(name.replace("@", ""));
                 updateHandle();
             }
         });
 
-        viewModel.getJoinDate().observe(getViewLifecycleOwner(), date -> updateHandle());
+        profileViewModel.getJoinDate().observe(getViewLifecycleOwner(), date -> updateHandle());
         
-        viewModel.getBdsCreated().observe(getViewLifecycleOwner(), val -> binding.tvStatBds.setText(val));
-        viewModel.getPanelsDrawn().observe(getViewLifecycleOwner(), val -> binding.tvStatPanels.setText(val));
-        viewModel.getReactionsReceived().observe(getViewLifecycleOwner(), val -> binding.tvStatReacts.setText(val));
-        viewModel.getStreak().observe(getViewLifecycleOwner(), val -> binding.tvStreak.setText(val));
-        viewModel.getRanking().observe(getViewLifecycleOwner(), val -> binding.tvRanking.setText(val));
+        profileViewModel.getBdsCreated().observe(getViewLifecycleOwner(), val -> binding.tvStatBds.setText(val));
+        profileViewModel.getPanelsDrawn().observe(getViewLifecycleOwner(), val -> binding.tvStatPanels.setText(val));
+        profileViewModel.getReactionsReceived().observe(getViewLifecycleOwner(), val -> binding.tvStatReacts.setText(val));
+        profileViewModel.getStreak().observe(getViewLifecycleOwner(), val -> binding.tvStreak.setText(val));
+        profileViewModel.getRanking().observe(getViewLifecycleOwner(), val -> binding.tvRanking.setText(val));
+
+        // Dynamic notification badge linked to the whole app state
+        dashboardViewModel.getNotificationCount().observe(getViewLifecycleOwner(), count -> {
+            if (count != null && count > 0) {
+                binding.tvNotificationBadge.setVisibility(View.VISIBLE);
+                binding.tvNotificationBadge.setText(String.valueOf(count));
+            } else {
+                binding.tvNotificationBadge.setVisibility(View.GONE);
+            }
+        });
     }
 
     private void updateHandle() {
-        String name = viewModel.getUsername().getValue();
-        String date = viewModel.getJoinDate().getValue();
+        String name = profileViewModel.getUsername().getValue();
+        String date = profileViewModel.getJoinDate().getValue();
         if (name != null && date != null) {
-            binding.tvProfileHandle.setText(name + " · membre depuis " + date);
+            binding.tvProfileHandle.setText("@" + name + " · membre depuis " + date);
         }
     }
 

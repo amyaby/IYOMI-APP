@@ -1,6 +1,7 @@
 package com.yomi.model;
 
 import com.yomi.database.StoryEntity;
+import com.yomi.database.StoryWithReactions;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -31,7 +32,26 @@ public class Mappers {
                 order,
                 new ArrayList<>(), // panels list
                 entity.getCreatedAt(),
-                entity.getInviteCode()
+                entity.getInviteCode(),
+                0 // Default reaction count
+        );
+    }
+
+    public static Story fromWithReactions(StoryWithReactions swr) {
+        if (swr == null) return null;
+        Story story = fromEntity(swr.story, null);
+        return new Story(
+                story.getId(),
+                story.getTitle(),
+                story.getCreatorId(),
+                story.getTotalPanels(),
+                story.getCurrentPanelIndex(),
+                story.getStatus(),
+                story.getPlayerOrder(),
+                story.getPanels(),
+                story.getCreatedAt(),
+                story.getInviteCode(),
+                swr.reactionCount
         );
     }
 }

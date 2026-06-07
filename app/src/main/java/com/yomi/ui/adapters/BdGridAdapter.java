@@ -5,25 +5,25 @@ import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-import com.yomi.database.StoryEntity;
 import com.yomi.databinding.ItemBdGridBinding;
+import com.yomi.model.Story;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BdGridAdapter extends RecyclerView.Adapter<BdGridAdapter.ViewHolder> {
 
-    private List<StoryEntity> stories = new ArrayList<>();
+    private List<Story> stories = new ArrayList<>();
     private OnStoryClickListener listener;
 
     public interface OnStoryClickListener {
-        void onStoryClick(StoryEntity story);
+        void onStoryClick(Story story);
     }
 
     public void setOnStoryClickListener(OnStoryClickListener listener) {
         this.listener = listener;
     }
 
-    public void setStories(List<StoryEntity> stories) {
+    public void setStories(List<Story> stories) {
         this.stories = stories;
         notifyDataSetChanged();
     }
@@ -37,12 +37,10 @@ public class BdGridAdapter extends RecyclerView.Adapter<BdGridAdapter.ViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        StoryEntity story = stories.get(position);
+        Story story = stories.get(position);
         holder.binding.tvGridTitle.setText(story.getTitle());
         holder.binding.tvGridMeta.setText(story.getTotalPanels() + " panels");
-        
-        // Mocking some data for the mockup look (Image 6)
-        holder.binding.tvGridReact.setText("🤩 12");
+        holder.binding.tvGridReact.setText("🤩 " + story.getReactionCount());
         
         if (position % 3 == 0) holder.binding.tvGridThumb.setText("👾");
         else if (position % 3 == 1) holder.binding.tvGridThumb.setText("🌙");

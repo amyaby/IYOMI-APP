@@ -37,25 +37,26 @@ public class MyBdsFragment extends Fragment {
     }
 
     private void setupRecyclerViews() {
-        // Grid Adapter for "Mes BDs" (Image 6)
         BdGridAdapter gridAdapter = new BdGridAdapter();
         binding.rvMyBdsGrid.setAdapter(gridAdapter);
         
         gridAdapter.setOnStoryClickListener(story -> {
             Bundle args = new Bundle();
             args.putLong("storyId", story.getId());
-            // Navigate to Final Reveal (Image 8)
-            Navigation.findNavController(requireView()).navigate(R.id.revealFragment, args);
+            if ("IN_PROGRESS".equals(story.getStatus().name())) {
+                Navigation.findNavController(requireView()).navigate(R.id.action_myBds_to_draw, args);
+            } else {
+                Navigation.findNavController(requireView()).navigate(R.id.action_myBds_to_reveal, args);
+            }
         });
 
-        // Suggested list at the bottom
         ExploreAdapter suggestedAdapter = new ExploreAdapter();
         binding.rvSuggestedBds.setAdapter(suggestedAdapter);
     }
 
     private void observeViewModel() {
         viewModel.getAllStories().observe(getViewLifecycleOwner(), stories -> {
-            if (binding.rvMyBdsGrid.getAdapter() != null) {
+            if (binding.rvMyBdsGrid.getAdapter() != null && stories != null) {
                 ((BdGridAdapter) binding.rvMyBdsGrid.getAdapter()).setStories(stories);
             }
         });

@@ -2,11 +2,14 @@ package com.yomi.repository;
 
 import android.app.Application;
 import androidx.lifecycle.LiveData;
+import com.yomi.database.FriendshipEntity;
 import com.yomi.database.PanelEntity;
 import com.yomi.database.PlayerEntity;
 import com.yomi.database.ReactionEntity;
 import com.yomi.database.StoryEntity;
+import com.yomi.database.StoryWithReactions;
 import com.yomi.database.YomiDatabase;
+import com.yomi.database.dao.FriendshipDao;
 import com.yomi.database.dao.PanelDao;
 import com.yomi.database.dao.PlayerDao;
 import com.yomi.database.dao.ReactionDao;
@@ -21,6 +24,7 @@ public class YomiRepository {
     private final StoryDao storyDao;
     private final PanelDao panelDao;
     private final ReactionDao reactionDao;
+    private final FriendshipDao friendshipDao;
     private final ExecutorService executorService;
 
     public YomiRepository(Application application) {
@@ -29,6 +33,7 @@ public class YomiRepository {
         storyDao = db.storyDao();
         panelDao = db.panelDao();
         reactionDao = db.reactionDao();
+        friendshipDao = db.friendshipDao();
         executorService = Executors.newFixedThreadPool(4);
     }
 
@@ -39,15 +44,33 @@ public class YomiRepository {
         });
     }
 
+    public List<PlayerEntity> getAllPlayersSync() {
+        return playerDao.getAllPlayersSync();
+    }
+
+    public LiveData<List<PlayerEntity>> getAllPlayers() {
+        return playerDao.getAllPlayers();
+    }
+
+    public void getPlayerById(long id, Consumer<PlayerEntity> callback) {
+        executorService.execute(() -> {
+            PlayerEntity player = playerDao.getById(id);
+            if (callback != null) callback.accept(player);
+        });
+    }
+
+    public void getPlayerByUsername(String username, Consumer<PlayerEntity> callback) {
+        executorService.execute(() -> {
+            PlayerEntity player = playerDao.getByUsername(username);
+            if (callback != null) callback.accept(player);
+        });
+    }
+
     public void login(String email, String password, Consumer<PlayerEntity> callback) {
         executorService.execute(() -> {
             PlayerEntity player = playerDao.login(email, password);
             if (callback != null) callback.accept(player);
         });
-    }
-
-    public LiveData<List<PlayerEntity>> getAllPlayers() {
-        return playerDao.getAllPlayers();
     }
 
     public void insertStory(StoryEntity story) {
@@ -58,24 +81,28 @@ public class YomiRepository {
         executorService.execute(() -> storyDao.update(story));
     }
 
-    public StoryEntity getStoryByIdSync(long id) {
-        return storyDao.getStoryByIdSync(id);
+    public LiveData<StoryEntity> getStoryById(long id) {
+        return storyDao.getStoryById(id);
     }
 
-    public LiveData<List<StoryEntity>> getAllStories() {
-        return storyDao.getAllStories();
+    public StoryEntity getStoryByIdSync(long id) {
+        return storyDao.getStoryByIdSync(id);
     }
 
     public LiveData<List<StoryEntity>> getActiveStories() {
         return storyDao.getActiveStories();
     }
 
-    public LiveData<List<StoryEntity>> getActiveStoriesForPlayer(long playerId) {
-        return storyDao.getActiveStoriesForPlayer(playerId);
+    public LiveData<List<StoryWithReactions>> getActiveStoriesWithReactions() {
+        return storyDao.getActiveStoriesWithReactions();
     }
 
-    public LiveData<List<StoryEntity>> getCompletedStories() {
-        return storyDao.getCompletedStories();
+    public LiveData<List<StoryWithReactions>> getCompletedStoriesWithReactions() {
+        return storyDao.getCompletedStoriesWithReactions();
+    }
+
+    public LiveData<List<StoryWithReactions>> getAllStoriesWithReactions() {
+        return storyDao.getAllStoriesWithReactions();
     }
 
     public void joinStory(long storyId, long playerId, Consumer<Boolean> callback) {
@@ -91,8 +118,6 @@ public class YomiRepository {
                 story.setPlayerOrder(order);
                 storyDao.update(story);
                 if (callback != null) callback.accept(true);
-            } else if (callback != null) {
-                callback.accept(false);
             }
         });
     }
@@ -113,11 +138,32 @@ public class YomiRepository {
         return reactionDao.getReactionsForStory(storyId);
     }
 
+    public LiveData<Integer> getReactionCount(long storyId) {
+        return reactionDao.getReactionCount(storyId);
+    }
+
+    public LiveData<List<ReactionEntity>> getReactionsForPlayerStories(long playerId) {
+        return reactionDao.getReactionsForPlayerStories(playerId);
+    }
+
     public LiveData<Integer> getStoryCountByPlayer(long playerId) {
         return storyDao.getStoryCountByPlayer(playerId);
     }
 
-    public LiveData<StoryEntity> getStoryById(long id) {
-        return storyDao.getStoryById(id);
+    // Friendship methods
+    public void addFriend(long userId, long friendId) {
+        executorService.execute(() -> friendshipDao.insert(new FriendshipEntity(userId, friendId)));
+    }
+
+    public void removeFriend(long userId, long friendId) {
+        executorService.execute(() -> friendshipDao.delete(new FriendshipEntity(userId, friendId)));
+    }
+
+    public LiveData<List<PlayerEntity>> getFriends(long userId) {
+        return friendshipDao.getFriends(userId);
+    }
+
+    public LiveData<List<PlayerEntity>> getFriendSuggestions(long userId) {
+        return friendshipDao.getSuggestions(userId);
     }
 }

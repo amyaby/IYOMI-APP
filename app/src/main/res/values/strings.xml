@@ -1,0 +1,45 @@
+<resources>
+    <string name="app_name">IYomi</string>
+    <string name="tagline">"Dessinez ensemble,\ndécouvrez l\'inattendu."</string>
+    <string name="create_account">Créer un compte</string>
+    <string name="have_account">J\'ai déjà un compte</string>
+
+    <string name="nav_home">Accueil</string>
+    <string name="nav_my_bds">Mes BDs</string>
+    <string name="nav_explore">Explorer</string>
+    <string name="nav_profile">Profil</string>
+
+    <string name="title_active_stories">HISTOIRES ACTIVES</string>
+    <string name="title_popular_bds">BDS POPULAIRES</string>
+    <string name="title_suggested_collabs">COLLABORATEURS SUGGÉRÉS</string>
+
+    <string name="at_luna_at_mars_at_star">"@luna · @mars · @star"</string>
+    <string name="at_luna_at_mars">"@luna · @mars"</string>
+    <string name="sketchr_membre_depuis_mars_2025">"@sketchr · membre depuis mars 2025"</string>
+
+    <string name="empty_stories_title">"🌵 Pas d\'histoires en cours"</string>
+    <string name="empty_stories_sub">Commence une nouvelle aventure ou rejoins-en une !</string>
+    <string name="btn_start_adventure">Commencer une BD</string>
+
+    <string name="notification_turn_format">"C\'est ton tour ! \"%1$s\" attend ton panel."</string>
+    <string name="story_title_format">"%1$s ✨"</string>
+    <string name="story_meta_format">"%1$d panels · %2$d joueurs"</string>
+
+    <string name="invite_by_username_title">Inviter par nom d\'utilisateur</string>
+    <string name="hint_username">Nom d\'utilisateur…</string>
+    <string name="btn_add">Ajouter</string>
+    <string name="label_suggested">Suggérés</string>
+
+    <string name="reaction_funny">😂</string>
+    <string name="reaction_heart">❤️</string>
+    <string name="reaction_fire">🔥</string>
+    <string name="reaction_clap">👏</string>
+
+    <string name="vote_funny">😂 Drôle</string>
+    <string name="vote_touching">❤️ Touchant</string>
+    <string name="vote_masterpiece">🔥 Chef-d\'œuvre</string>
+
+    <string name="msg_voted">"Merci pour votre vote %1$s !"</string>
+    <string name="msg_player_added">Joueur ajouté !</string>
+    <string name="msg_player_invited">Nouveau joueur invité !</string>
+</resources>

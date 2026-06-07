@@ -119,12 +119,10 @@ public class ActiveStoryAdapter extends RecyclerView.Adapter<ActiveStoryAdapter.
 
     static class ViewHolder extends RecyclerView.ViewHolder {
         ItemStoryBinding binding;
-        LinearLayout panelPreviewContainer;
         
         ViewHolder(ItemStoryBinding binding) {
             super(binding.getRoot());
             this.binding = binding;
-            this.panelPreviewContainer = binding.panelPreviewContainer;
         }
     }
 }

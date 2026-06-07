@@ -23,6 +23,7 @@ public class StoryEntity {
     private long createdAt;
     private Long completedAt;
     private String inviteCode;
+    private int timerMinutes;
 
     public StoryEntity(String title, long creatorId, int totalPanels, String inviteCode) {
         this.title = title;
@@ -33,6 +34,7 @@ public class StoryEntity {
         this.playerOrder = "";
         this.createdAt = System.currentTimeMillis();
         this.inviteCode = inviteCode;
+        this.timerMinutes = 1440; // Default 24h
     }
 
     public long getId() { return id; }
@@ -51,4 +53,6 @@ public class StoryEntity {
     public Long getCompletedAt() { return completedAt; }
     public void setCompletedAt(Long completedAt) { this.completedAt = completedAt; }
     public String getInviteCode() { return inviteCode; }
+    public int getTimerMinutes() { return timerMinutes; }
+    public void setTimerMinutes(int timerMinutes) { this.timerMinutes = timerMinutes; }
 }

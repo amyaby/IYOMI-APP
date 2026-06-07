@@ -8,17 +8,27 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.yomi.database.PanelEntity;
+import com.yomi.database.ReactionEntity;
 import com.yomi.databinding.ItemRevealPanelBinding;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class PanelRevealAdapter extends RecyclerView.Adapter<PanelRevealAdapter.ViewHolder> {
 
     private List<PanelEntity> panels = new ArrayList<>();
+    private List<ReactionEntity> allReactions = new ArrayList<>();
 
     public void setPanels(List<PanelEntity> panels) {
         this.panels = panels;
+        notifyDataSetChanged();
+    }
+
+    public void setReactions(List<ReactionEntity> reactions) {
+        this.allReactions = reactions;
         notifyDataSetChanged();
     }
 
@@ -36,7 +46,6 @@ public class PanelRevealAdapter extends RecyclerView.Adapter<PanelRevealAdapter.
         holder.binding.tvPanelNumber.setText(String.valueOf(panel.getPanelIndex() + 1));
         holder.binding.tvAuthorName.setText("@" + panel.getAuthorName());
 
-        // Load image from path
         if (panel.getImagePath() != null) {
             File imgFile = new File(panel.getImagePath());
             if (imgFile.exists()) {
@@ -45,7 +54,6 @@ public class PanelRevealAdapter extends RecyclerView.Adapter<PanelRevealAdapter.
             }
         }
 
-        // Show dialog bubble if it exists (Image 5 logic)
         if (panel.getDialogText() != null && !panel.getDialogText().isEmpty()) {
             holder.binding.tvPanelBubble.setVisibility(View.VISIBLE);
             holder.binding.tvPanelBubble.setText(panel.getDialogText());
@@ -53,8 +61,31 @@ public class PanelRevealAdapter extends RecyclerView.Adapter<PanelRevealAdapter.
             holder.binding.tvPanelBubble.setVisibility(View.GONE);
         }
         
-        // Mocking reaction summary
-        holder.binding.tvReactionSummary.setText("😂 3  ❤️ 1  🔥 1");
+        updateReactionSummary(holder, panel.getPanelIndex());
+    }
+
+    private void updateReactionSummary(ViewHolder holder, int panelIndex) {
+        List<ReactionEntity> panelReactions = allReactions.stream()
+                .filter(r -> r.getPanelIndex() == panelIndex)
+                .collect(Collectors.toList());
+
+        if (panelReactions.isEmpty()) {
+            holder.binding.tvReactionSummary.setText("Pas encore de réactions");
+            return;
+        }
+
+        Map<String, Integer> counts = new HashMap<>();
+        for (ReactionEntity r : panelReactions) {
+            counts.put(r.getEmoji(), counts.getOrDefault(r.getEmoji(), 0) + 1);
+        }
+
+        StringBuilder sb = new StringBuilder();
+        if (counts.containsKey("😂")) sb.append("😂 ").append(counts.get("😂")).append("  ");
+        if (counts.containsKey("❤️")) sb.append("❤️ ").append(counts.get("❤️")).append("  ");
+        if (counts.containsKey("🔥")) sb.append("🔥 ").append(counts.get("🔥")).append("  ");
+        if (counts.containsKey("👏")) sb.append("👏 ").append(counts.get("👏"));
+
+        holder.binding.tvReactionSummary.setText(sb.toString().trim());
     }
 
     @Override

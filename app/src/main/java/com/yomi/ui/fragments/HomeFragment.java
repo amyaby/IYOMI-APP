@@ -37,7 +37,7 @@ public class HomeFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         sessionManager = new SessionManager(requireContext());
-        viewModel = new ViewModelProvider(this).get(DashboardViewModel.class);
+        viewModel = new ViewModelProvider(requireActivity()).get(DashboardViewModel.class);
 
         setupHeader();
         setupNavigation();
@@ -60,29 +60,26 @@ public class HomeFragment extends Fragment {
         binding.btnCreateFirstStory.setOnClickListener(startCreate);
 
         binding.layoutNotification.setOnClickListener(v -> {
-            Story turnStory = viewModel.getTurnNotification().getValue();
-            if (turnStory != null) {
+            Story story = viewModel.getNotificationStory().getValue();
+            if (story != null) {
                 Bundle args = new Bundle();
-                args.putLong("storyId", turnStory.getId());
-                Navigation.findNavController(v).navigate(R.id.drawFragment, args);
+                args.putLong("storyId", story.getId());
+                if (story.getCurrentPanelIndex() < story.getTotalPanels()) {
+                    Navigation.findNavController(v).navigate(R.id.action_home_to_draw, args);
+                } else {
+                    Navigation.findNavController(v).navigate(R.id.action_home_to_reveal, args);
+                }
             }
         });
     }
 
     private void observeViewModel() {
-        // Active Stories
         ActiveStoryAdapter activeAdapter = new ActiveStoryAdapter();
         binding.rvActiveStories.setAdapter(activeAdapter);
         activeAdapter.setOnStoryClickListener(story -> {
-            long currentUserId = sessionManager.getPlayerId();
-            if (story.getCurrentPanelIndex() < story.getPlayerOrder().size() && 
-                story.getPlayerOrder().get(story.getCurrentPanelIndex()) == currentUserId) {
-                Bundle args = new Bundle();
-                args.putLong("storyId", story.getId());
-                Navigation.findNavController(requireView()).navigate(R.id.drawFragment, args);
-            } else {
-                Toast.makeText(getContext(), "En attente des autres joueurs...", Toast.LENGTH_SHORT).show();
-            }
+            Bundle args = new Bundle();
+            args.putLong("storyId", story.getId());
+            Navigation.findNavController(requireView()).navigate(R.id.action_home_to_draw, args);
         });
 
         viewModel.getActiveStories().observe(getViewLifecycleOwner(), stories -> {
@@ -96,23 +93,27 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // "Your Turn" Notification
-        viewModel.getTurnNotification().observe(getViewLifecycleOwner(), story -> {
-            if (story != null) {
+        viewModel.getNotificationMessage().observe(getViewLifecycleOwner(), message -> {
+            if (message != null) {
                 binding.layoutNotification.setVisibility(View.VISIBLE);
-                binding.tvNotificationText.setText("C'est ton tour ! \"" + story.getTitle() + "\" attend ton panel.");
+                binding.tvNotificationText.setText(message);
             } else {
                 binding.layoutNotification.setVisibility(View.GONE);
             }
         });
 
-        // Popular BDs
         ExploreAdapter popularAdapter = new ExploreAdapter();
         binding.rvPopularStories.setAdapter(popularAdapter);
         popularAdapter.setOnStoryClickListener(story -> {
             Bundle args = new Bundle();
             args.putLong("storyId", story.getId());
-            Navigation.findNavController(requireView()).navigate(R.id.revealFragment, args);
+            Navigation.findNavController(requireView()).navigate(R.id.action_home_to_reveal, args);
+        });
+        
+        // Handle reaction click on Home screen
+        popularAdapter.setOnReactionClickListener(storyId -> {
+            viewModel.vote(storyId, "🔥");
+            Toast.makeText(getContext(), "Vous avez aimé cette BD ! 🔥", Toast.LENGTH_SHORT).show();
         });
 
         viewModel.getCompletedStories().observe(getViewLifecycleOwner(), stories -> {
@@ -121,9 +122,19 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        // Collaborators
         CollaboratorAdapter collabAdapter = new CollaboratorAdapter();
         binding.rvCollaborators.setAdapter(collabAdapter);
+        collabAdapter.setOnCollaboratorClickListener(player -> {
+            Bundle args = new Bundle();
+            args.putLong("initialPlayerId", player.getId());
+            Navigation.findNavController(requireView()).navigate(R.id.action_home_to_create, args);
+        });
+
+        viewModel.getCollaborators().observe(getViewLifecycleOwner(), players -> {
+            if (players != null) {
+                collabAdapter.setCollaborators(players);
+            }
+        });
     }
 
     @Override

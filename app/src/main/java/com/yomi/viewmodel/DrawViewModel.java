@@ -2,31 +2,30 @@ package com.yomi.viewmodel;
 
 import android.app.Application;
 import android.graphics.Bitmap;
-import android.os.Handler;
-import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import com.yomi.database.PanelEntity;
-import com.yomi.database.StoryEntity;
+import com.yomi.domain.usecases.SubmitPanelUseCase;
 import com.yomi.repository.SessionManager;
-import com.yomi.repository.YomiRepository;
+import com.yomi.repository.StoryRepository;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.concurrent.Executors;
 
 public class DrawViewModel extends AndroidViewModel {
-    private final YomiRepository repository;
+    private final SubmitPanelUseCase submitPanelUseCase;
     private final SessionManager sessionManager;
+    private final StoryRepository repository;
     private final MutableLiveData<String> timerValue = new MutableLiveData<>("13h 42m");
     private final MutableLiveData<PanelEntity> previousPanelData = new MutableLiveData<>();
 
     public DrawViewModel(@NonNull Application application) {
         super(application);
-        repository = new YomiRepository(application);
-        sessionManager = new SessionManager(application);
+        this.repository = new StoryRepository(application);
+        this.submitPanelUseCase = new SubmitPanelUseCase(repository);
+        this.sessionManager = new SessionManager(application);
     }
 
     public LiveData<String> getTimerValue() {
@@ -56,38 +55,25 @@ public class DrawViewModel extends AndroidViewModel {
     }
 
     public void submitTurn(long storyId, long authorId, Bitmap bitmap, String bubbleText) {
-        Executors.newSingleThreadExecutor().execute(() -> {
-            // Use synchronous fetch to avoid observer leaks
-            StoryEntity story = repository.getStoryByIdSync(storyId);
-            if (story != null && !"COMPLETED".equals(story.getStatus())) {
-                int currentIndex = story.getCurrentPanelIndex();
-                String authorName = sessionManager.getPlayerName();
-                
-                savePanelLocalSync(storyId, authorId, authorName != null ? authorName : "Anonyme", currentIndex, bitmap, bubbleText);
-                
-                // Advance turn
-                int nextIndex = currentIndex + 1;
-                story.setCurrentPanelIndex(nextIndex);
-                
-                // Check if the story is now finished
-                if (nextIndex >= story.getTotalPanels()) {
-                    story.setStatus("COMPLETED");
-                    story.setCompletedAt(System.currentTimeMillis());
-                }
-                
-                repository.updateStory(story);
+        String authorName = sessionManager.getPlayerName();
+        // Get current index from story sync
+        new Thread(() -> {
+            com.yomi.database.StoryEntity story = repository.getStoryByIdSync(storyId);
+            if (story != null) {
+                int index = story.getCurrentPanelIndex();
+                savePanelLocal(storyId, authorId, authorName != null ? authorName : "Anonyme", index, bitmap, bubbleText);
             }
-        });
+        }).start();
     }
 
-    private void savePanelLocalSync(long storyId, long authorId, String authorName, int index, Bitmap bitmap, String text) {
+    private void savePanelLocal(long storyId, long authorId, String authorName, int index, Bitmap bitmap, String text) {
         String fileName = "panel_" + storyId + "_" + index + "_" + System.currentTimeMillis() + ".png";
         File file = new File(getApplication().getFilesDir(), fileName);
 
         try (FileOutputStream out = new FileOutputStream(file)) {
             bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
             PanelEntity entity = new PanelEntity(storyId, authorId, authorName, index, file.getAbsolutePath(), text, false);
-            repository.insertPanel(entity);
+            submitPanelUseCase.execute(storyId, entity);
         } catch (IOException e) {
             e.printStackTrace();
         }

@@ -48,9 +48,9 @@ public class RevealFragment extends Fragment {
         binding.rvPanels.setLayoutManager(new LinearLayoutManager(getContext()));
         binding.rvPanels.setAdapter(adapter);
 
+        setupReactionListeners();
         observeViewModel();
 
-        // Functional buttons (Image 8)
         binding.btnMyBds.setOnClickListener(v -> 
             Navigation.findNavController(v).navigate(R.id.myBdsFragment)
         );
@@ -66,20 +66,49 @@ public class RevealFragment extends Fragment {
         binding.btnShare.setOnClickListener(v -> {
             Toast.makeText(getContext(), "Ouverture du partage...", Toast.LENGTH_SHORT).show();
         });
-        
-        // Redundant tab listeners removed - MainActivity handles global navigation
+    }
+
+    private void setupReactionListeners() {
+        binding.btnReactFunny.setOnClickListener(v -> handleReaction("😂"));
+        binding.btnReactHeart.setOnClickListener(v -> handleReaction("❤️"));
+        binding.btnReactFire.setOnClickListener(v -> handleReaction("🔥"));
+        binding.btnReactClap.setOnClickListener(v -> handleReaction("👏"));
+    }
+
+    private void handleReaction(String emoji) {
+        viewModel.vote(storyId, emoji);
+        Toast.makeText(getContext(), "Réaction " + emoji + " ajoutée !", Toast.LENGTH_SHORT).show();
     }
 
     private void observeViewModel() {
         viewModel.getStory(storyId).observe(getViewLifecycleOwner(), story -> {
             if (story != null) {
-                binding.tvStoryTitle.setText(story.getTitle() + " ✨");
-                binding.tvStoryMeta.setText(story.getTotalPanels() + " panels · " + story.getTotalPanels() + " joueurs");
+                binding.tvStoryTitle.setText(getString(R.string.story_title_format, story.getTitle()));
+                binding.tvStoryMeta.setText(getString(R.string.story_meta_format, story.getTotalPanels(), story.getTotalPanels()));
             }
         });
 
         viewModel.getPanels(storyId).observe(getViewLifecycleOwner(), panels -> {
-            adapter.setPanels(panels);
+            if (panels != null) {
+                adapter.setPanels(panels);
+            }
+        });
+
+        // Add observation for reactions to update the counts in the panels
+        viewModel.getReactions(storyId).observe(getViewLifecycleOwner(), reactions -> {
+            if (reactions != null) {
+                adapter.setReactions(reactions);
+            }
+        });
+
+        // Observe total reactions for the story header
+        viewModel.getTotalReactions(storyId).observe(getViewLifecycleOwner(), count -> {
+            if (count != null && count > 0) {
+                binding.tvTotalStoryReactions.setVisibility(View.VISIBLE);
+                binding.tvTotalStoryReactions.setText("🔥 " + count);
+            } else {
+                binding.tvTotalStoryReactions.setVisibility(View.GONE);
+            }
         });
     }
 

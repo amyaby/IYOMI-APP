@@ -7,6 +7,7 @@ import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
 import androidx.room.Update;
 import com.yomi.database.StoryEntity;
+import com.yomi.database.StoryWithReactions;
 import java.util.List;
 
 @Dao
@@ -19,6 +20,18 @@ public interface StoryDao {
 
     @Query("SELECT * FROM stories ORDER BY createdAt DESC")
     LiveData<List<StoryEntity>> getAllStories();
+
+    @Query("SELECT stories.*, (SELECT COUNT(*) FROM reactions WHERE reactions.storyId = stories.id) as reactionCount FROM stories ORDER BY createdAt DESC")
+    LiveData<List<StoryWithReactions>> getAllStoriesWithReactions();
+
+    @Query("SELECT stories.*, (SELECT COUNT(*) FROM reactions WHERE reactions.storyId = stories.id) as reactionCount FROM stories WHERE title LIKE '%' || :query || '%' ORDER BY createdAt DESC")
+    LiveData<List<StoryWithReactions>> searchStories(String query);
+
+    @Query("SELECT stories.*, (SELECT COUNT(*) FROM reactions WHERE reactions.storyId = stories.id) as reactionCount FROM stories WHERE status = 'IN_PROGRESS' ORDER BY createdAt DESC")
+    LiveData<List<StoryWithReactions>> getActiveStoriesWithReactions();
+
+    @Query("SELECT stories.*, (SELECT COUNT(*) FROM reactions WHERE reactions.storyId = stories.id) as reactionCount FROM stories WHERE status = 'COMPLETED' ORDER BY completedAt DESC")
+    LiveData<List<StoryWithReactions>> getCompletedStoriesWithReactions();
 
     @Query("SELECT * FROM stories WHERE id = :id")
     LiveData<StoryEntity> getStoryById(long id);

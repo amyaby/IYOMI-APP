@@ -41,7 +41,6 @@ public class YomiCanvasView extends View {
 
     @Override
     protected void onDraw(Canvas canvas) {
-        // Draw stored paths
         for (DrawPath dp : paths) {
             paint.setColor(dp.color);
             paint.setStrokeWidth(dp.strokeWidth);
@@ -53,7 +52,6 @@ public class YomiCanvasView extends View {
             canvas.drawPath(dp.path, paint);
         }
 
-        // Draw current path
         if (currentPath != null) {
             paint.setColor(currentColor);
             paint.setStrokeWidth(currentStrokeWidth);
@@ -109,6 +107,13 @@ public class YomiCanvasView extends View {
         }
     }
 
+    public void redo() {
+        if (!undonePaths.isEmpty()) {
+            paths.add(undonePaths.remove(undonePaths.size() - 1));
+            invalidate();
+        }
+    }
+
     public void clear() {
         paths.clear();
         undonePaths.clear();
@@ -118,7 +123,6 @@ public class YomiCanvasView extends View {
     public Bitmap getBitmap() {
         Bitmap result = Bitmap.createBitmap(getWidth(), getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(result);
-        // Ensure background is transparent or white for export
         canvas.drawColor(Color.WHITE);
         draw(canvas);
         return result;

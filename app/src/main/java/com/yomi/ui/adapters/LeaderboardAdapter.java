@@ -9,14 +9,15 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 import com.yomi.R;
 import com.yomi.database.StoryEntity;
+import com.yomi.database.StoryWithReactions;
 import java.util.ArrayList;
 import java.util.List;
 
 public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.ViewHolder> {
 
-    private List<StoryEntity> stories = new ArrayList<>();
+    private List<StoryWithReactions> stories = new ArrayList<>();
 
-    public void setStories(List<StoryEntity> stories) {
+    public void setStories(List<StoryWithReactions> stories) {
         this.stories = stories;
         notifyDataSetChanged();
     }
@@ -24,15 +25,15 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        // We can reuse a simple vertical linear layout or define a new item_leaderboard.xml
-        // For efficiency, I will use a simplified programmatic approach or a new layout.
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_leaderboard, parent, false);
         return new ViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        StoryEntity story = stories.get(position);
+        StoryWithReactions storyWithReactions = stories.get(position);
+        StoryEntity story = storyWithReactions.story;
+        
         String rankIcon = "";
         switch (position) {
             case 0: rankIcon = "🏆"; break;
@@ -42,8 +43,14 @@ public class LeaderboardAdapter extends RecyclerView.Adapter<LeaderboardAdapter.
         }
         holder.tvRank.setText(rankIcon);
         holder.tvTitle.setText(story.getTitle());
-        holder.tvVotes.setText("912"); // Mocked value
-        holder.pbVotes.setProgress(91 - (position * 10));
+        holder.tvVotes.setText(String.valueOf(storyWithReactions.reactionCount));
+        
+        int maxReactions = stories.get(0).reactionCount;
+        if (maxReactions > 0) {
+            holder.pbVotes.setProgress((int) ((storyWithReactions.reactionCount / (float) maxReactions) * 100));
+        } else {
+            holder.pbVotes.setProgress(0);
+        }
     }
 
     @Override
